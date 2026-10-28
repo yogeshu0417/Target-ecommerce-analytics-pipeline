@@ -1,0 +1,34 @@
+RAW SHAPES
+  customers: (3060, 6)   purchases: (3060, 6)   reviews: (3060, 5)
+[customers] removed 60 exact duplicate rows -> 3000 rows left
+[purchases] removed 60 exact duplicate rows -> 3000 rows left
+[reviews] removed 60 exact duplicate rows -> 3000 rows left
+
+CLEANING customers
+  dropped 150 rows with missing Customer_ID (no way to identify the customer)
+  imputed 142 missing Age values with the median age (44)
+  imputed 141 missing Gender values with the most common category ('Male')
+  filled 145 missing Location values with 'Unknown' (Location is high-cardinality/near-unique per customer, so mode imputation would misleadingly cluster them into one arbitrary city)
+  filled 139 missing Name values with 'Unknown'
+  dropped 146 rows with missing/unparseable Registration_Date (a fabricated signup date would distort tenure & cohort analysis)
+  customers final shape: (2704, 6)
+
+CLEANING purchases
+  dropped 150 rows with missing Transaction_ID
+  dropped 277 rows with missing Customer_ID or Product_ID (a transaction needs to know who bought what)
+  dropped 125 rows with missing/unparseable Purchase_Date
+  imputed 127 missing Quantity values with the median quantity (3)
+  imputed 118 missing Total_Price values (product-level median unit price x quantity, falling back to the global median price)
+  dropped 241 rows whose Customer_ID has no matching customer record (referential-integrity check, needed before loading into SQL with a foreign key)
+  purchases final shape: (2207, 6)
+
+CLEANING reviews
+  dropped 150 rows with missing Review_ID
+  dropped 278 rows with missing Customer_ID or Product_ID
+  standardized 700 text ratings ('poor'/'excellent') onto the numeric 1-5 scale
+  imputed 134 missing Rating values with the median rating (3)
+  filled 125 missing Review_Text values with a placeholder
+  dropped 266 rows whose Customer_ID has no matching customer record
+  reviews final shape: (2306, 7)
+
+Derived products dimension: 993 distinct products referenced in purchases and/or reviews

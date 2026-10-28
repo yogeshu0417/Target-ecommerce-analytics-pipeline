@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-Commerce Customer Behavior Analysis — Dashboard Preview</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1f3b57; --navy-deep:#152A3E; --teal:#2a9d8f; --coral:#e76f51;
+    --gold:#e9c46a; --bg:#eef1f4; --panel:#ffffff; --ink:#1c2b3a;
+    --ink-soft:#5b6b7a; --line:#dde3e9;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif; padding:32px 24px 64px;
+  }
+  h1,h2,h3{font-family:'Space Grotesk', sans-serif; margin:0;}
+  .wrap{max-width:1180px; margin:0 auto;}
+  header{margin-bottom:28px;}
+  .eyebrow{font-size:13px; color:var(--teal); font-weight:600; letter-spacing:.02em;}
+  h1{font-size:30px; color:var(--navy-deep); margin-top:4px; font-weight:700;}
+  .sub{color:var(--ink-soft); font-size:14.5px; max-width:640px; margin-top:8px; line-height:1.5;}
+
+  .tabs{display:flex; gap:6px; margin:26px 0 20px; border-bottom:1px solid var(--line);}
+  .tab{
+    padding:10px 18px; font-size:14px; font-weight:600; color:var(--ink-soft);
+    cursor:pointer; border-bottom:2px solid transparent; user-select:none;
+    font-family:'Space Grotesk', sans-serif;
+  }
+  .tab.active{color:var(--navy-deep); border-bottom-color:var(--teal);}
+
+  .page{display:none;}
+  .page.active{display:block;}
+
+  .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px;}
+  .kpi{background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:16px 18px;}
+  .kpi .label{font-size:12px; color:var(--ink-soft); font-weight:500;}
+  .kpi .value{font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; color:var(--navy-deep); margin-top:4px;}
+  .kpi .value.teal{color:var(--teal);}
+  .kpi .value.coral{color:var(--coral);}
+
+  .grid2{display:grid; grid-template-columns:1.3fr 1fr; gap:16px;}
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:18px 20px;}
+  .panel h3{font-size:15px; color:var(--navy-deep); margin-bottom:2px;}
+  .panel .note{font-size:12.5px; color:var(--ink-soft); margin-bottom:12px;}
+  canvas{max-height:320px;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{text-align:left; color:var(--ink-soft); font-weight:600; padding:6px 8px; border-bottom:1px solid var(--line); font-size:12px;}
+  td{padding:6px 8px; border-bottom:1px solid #eef1f4;}
+  td.num{font-family:'IBM Plex Mono', monospace; text-align:right;}
+  th.num{text-align:right;}
+
+  .callout{
+    margin-top:16px; background:#fbf6e9; border:1px solid #eadfb8; border-radius:6px;
+    padding:12px 16px; font-size:13px; color:#6b5b1f; line-height:1.5;
+  }
+  .full{grid-column:1/-1;}
+  footer{margin-top:34px; font-size:12px; color:var(--ink-soft);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Phase 3 preview</div>
+    <h1>E-Commerce Customer Behavior Dashboard</h1>
+    <p class="sub">Built from the cleaned Phase 1 data and the Phase 2 SQL query results.
+    This previews what the three required Power BI pages will show — rebuild it in Power BI Desktop
+    with <code>PowerBI_Setup_Guide.md</code> for the graded submission.</p>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-page="p1">Regional Sales</div>
+    <div class="tab" data-page="p2">Product Popularity</div>
+    <div class="tab" data-page="p3">Customer Sentiment</div>
+  </div>
+
+  <!-- PAGE 1: REGIONAL -->
+  <div class="page active" id="p1">
+    <div class="kpis">
+      <div class="kpi"><div class="label">Total revenue</div><div class="value">$558,648.55</div></div>
+      <div class="kpi"><div class="label">Orders</div><div class="value">2,207</div></div>
+      <div class="kpi"><div class="label">Avg. order value</div><div class="value">$253.13</div></div>
+      <div class="kpi"><div class="label">Distinct locations</div><div class="value teal">2,343</div></div>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <h3>Top 15 locations by revenue</h3>
+        <div class="note">Excludes the "Unknown" bucket (customers whose location was missing pre-cleaning)</div>
+        <canvas id="chartRegional"></canvas>
+      </div>
+      <div class="panel">
+        <h3>Revenue by age band</h3>
+        <div class="note">Customer age, bucketed</div>
+        <canvas id="chartAgeBand"></canvas>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>Data-quality note:</strong> <code>Location</code> is a near-unique fictional
+      city per customer (2,343 distinct values across the cleaned customer base), so a
+      geographic map isn't very informative here — most cities have 1–3 customers.
+      A real state/region/country field would make this page far more useful; the
+      ranked bar chart is the more honest read on the data as supplied.
+    </div>
+  </div>
+
+  <!-- PAGE 2: PRODUCT -->
+  <div class="page" id="p2">
+    <div class="kpis">
+      <div class="kpi"><div class="label">Units sold</div><div class="value">6,518</div></div>
+      <div class="kpi"><div class="label">Distinct products sold</div><div class="value">893</div></div>
+      <div class="kpi"><div class="label">Best month</div><div class="value teal">Jul 2024</div></div>
+      <div class="kpi"><div class="label">Peak month revenue</div><div class="value">$29,748</div></div>
+    </div>
+    <div class="grid2">
+      <div class="panel full">
+        <h3>Monthly sales revenue trend</h3>
+        <div class="note">Feb 2023 – Feb 2025 (partial months at each end of the source data)</div>
+        <canvas id="chartMonthly" style="max-height:280px;"></canvas>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:16px;">
+      <div class="panel">
+        <h3>Top 10 products by units sold</h3>
+        <canvas id="chartTopProducts"></canvas>
+      </div>
+      <div class="panel">
+        <h3>Top customers by lifetime value</h3>
+        <table>
+          <tr><th>Customer</th><th class="num">Orders</th><th class="num">LTV</th></tr>
+          <tbody id="ltvTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 3: SENTIMENT -->
+  <div class="page" id="p3">
+    <div class="kpis">
+      <div class="kpi"><div class="label">Reviews analyzed</div><div class="value">2,306</div></div>
+      <div class="kpi"><div class="label">Average rating</div><div class="value">2.96 / 5</div></div>
+      <div class="kpi"><div class="label">Positive share</div><div class="value teal">39.4%</div></div>
+      <div class="kpi"><div class="label">Negative share</div><div class="value coral">42.0%</div></div>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <h3>Sentiment distribution</h3>
+        <div class="note">Derived from star rating: 1–2 Negative, 3 Neutral, 4–5 Positive</div>
+        <canvas id="chartSentiment"></canvas>
+      </div>
+      <div class="panel">
+        <h3>Positive vs. negative share — most-reviewed products</h3>
+        <canvas id="chartProductSentiment"></canvas>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>Method note:</strong> <code>Review_Text</code> in the source data is
+      auto-generated filler text rather than genuine customer language, so a text-based
+      NLP sentiment model would score it close to random. Sentiment here is derived from
+      the star <code>Rating</code>, which is the reliable signal in this dataset — see
+      the setup guide for how to swap in real text-based NLP once genuine review text
+      is available.
+    </div>
+  </div>
+
+  <footer>E-Commerce Customer Behavior Analysis — Phase 3 preview · generated from <code>cleaned_*.csv</code> via the Phase 2 SQL queries</footer>
+</div>
+
+<script>
+Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
+Chart.defaults.color = '#5b6b7a';
+const NAVY='#1f3b57', TEAL='#2a9d8f', CORAL='#e76f51', GOLD='#e9c46a';
+
+// tab switching
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.page).classList.add('active');
+  });
+});
+
+const regional = [
+  ["West Michaelshire",2364.62],["South Laura",1764.6],["New Joshua",1588.78],
+  ["Stevenport",1563.69],["Jamesbury",1553.57],["Port Jennifer",1549.15],
+  ["Jessicaborough",1500.93],["Jennifertown",1486.57],["South Joseph",1425.44],
+  ["Mikebury",1425.14],["Matthewton",1394.97],["East Terrance",1374.67],
+  ["Lake Justin",1371.36],["Transide",1328.25],["New Andreashire",1322.59]
+];
+new Chart(document.getElementById('chartRegional'), {
+  type:'bar',
+  data:{labels:regional.map(r=>r[0]), datasets:[{data:regional.map(r=>r[1]), backgroundColor:NAVY, borderRadius:3}]},
+  options:{indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{grid:{color:'#eef1f4'}}, y:{grid:{display:false}}}}
+});
+
+const ageBand = [["Under 25",66133.86],["25-34",106833.69],["35-44",127459.76],["45-54",107938.92],["55-64",95439.26],["65+",54843.06]];
+new Chart(document.getElementById('chartAgeBand'), {
+  type:'bar',
+  data:{labels:ageBand.map(a=>a[0]), datasets:[{data:ageBand.map(a=>a[1]), backgroundColor:TEAL, borderRadius:3}]},
+  options:{plugins:{legend:{display:false}}, scales:{y:{grid:{color:'#eef1f4'}}, x:{grid:{display:false}}}}
+});
+
+const monthly = [["2023-02",3905.04],["2023-03",16275.99],["2023-04",20778.33],["2023-05",25116.02],
+["2023-06",21623.03],["2023-07",27405.02],["2023-08",25335.02],["2023-09",24847.75],["2023-10",23581.62],
+["2023-11",19367.29],["2023-12",22166.27],["2024-01",24019.62],["2024-02",20213.0],["2024-03",23033.33],
+["2024-04",24187.67],["2024-05",25039.04],["2024-06",25991.38],["2024-07",29748.06],["2024-08",24001.47],
+["2024-09",22041.75],["2024-10",22115.8],["2024-11",24061.64],["2024-12",26075.65],["2025-01",24049.86],["2025-02",13668.9]];
+new Chart(document.getElementById('chartMonthly'), {
+  type:'line',
+  data:{labels:monthly.map(m=>m[0]), datasets:[{data:monthly.map(m=>m[1]), borderColor:NAVY, backgroundColor:'rgba(31,59,87,0.08)', fill:true, tension:.3, pointRadius:2}]},
+  options:{plugins:{legend:{display:false}}, scales:{y:{grid:{color:'#eef1f4'}}, x:{grid:{display:false}, ticks:{maxRotation:60, minRotation:60}}}}
+});
+
+const topProducts = [["1963",33],["1149",25],["1141",24],["1151",24],["1167",24],["1305",24],["1873",23],["1187",22],["1327",22],["1081",21]];
+new Chart(document.getElementById('chartTopProducts'), {
+  type:'bar',
+  data:{labels:topProducts.map(p=>'#'+p[0]), datasets:[{data:topProducts.map(p=>p[1]), backgroundColor:NAVY, borderRadius:3}]},
+  options:{indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{grid:{color:'#eef1f4'}}, y:{grid:{display:false}}}}
+});
+
+const ltv = [
+  ["Alicia Medina DVM",3,2364.62],["Timothy Henry",5,1425.14],["Carol Reese",4,1394.97],
+  ["Robert Myers",4,1374.67],["Jeffrey Nash",5,1328.25],["Gina Stone",4,1322.59],
+  ["Matthew Mcconnell",2,1295.07],["Lauren Martinez",4,1256.27],["William Murphy",4,1248.55],["Amber King",3,1237.66]
+];
+document.getElementById('ltvTable').innerHTML = ltv.map(r=>
+  `<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num">$${r[2].toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>`
+).join('');
+
+new Chart(document.getElementById('chartSentiment'), {
+  type:'doughnut',
+  data:{labels:['Positive','Negative','Neutral'], datasets:[{data:[908,969,429], backgroundColor:[TEAL,CORAL,GOLD]}]},
+  options:{plugins:{legend:{position:'bottom'}}, cutout:'55%'}
+});
+
+const prodSent = [["1531",50.0,37.5],["1775",100.0,0.0],["1852",75.0,25.0],["1435",28.6,57.1],["1997",42.9,28.6],
+["1071",33.3,50.0],["1128",33.3,33.3],["1193",66.7,16.7],["1213",16.7,66.7],["1285",16.7,66.7]];
+new Chart(document.getElementById('chartProductSentiment'), {
+  type:'bar',
+  data:{labels:prodSent.map(p=>'#'+p[0]),
+    datasets:[
+      {label:'Positive %', data:prodSent.map(p=>p[1]), backgroundColor:TEAL, borderRadius:3},
+      {label:'Negative %', data:prodSent.map(p=>p[2]), backgroundColor:CORAL, borderRadius:3}
+    ]},
+  options:{plugins:{legend:{position:'bottom'}}, scales:{y:{grid:{color:'#eef1f4'}, max:100}, x:{grid:{display:false}}}}
+});
+</script>
+</body>
+</html>
